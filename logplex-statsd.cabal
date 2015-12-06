@@ -63,7 +63,9 @@ executable logplex-statsd
   build-depends:       base >=4.8 && <4.9,
                        scotty >=0.10.2 && <0.11,
                        logplex-parse >=0.1 && <0.2,
-                       statsd-client >=0.1 && <0.2
+                       statsd-client >=0.1 && <0.2,
+                       text >=1.2.1.3 && <1.3,
+                       wai-extra >=3.0.13 && <3.1
 
   -- Directories containing source files.
   hs-source-dirs:      src
