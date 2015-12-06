@@ -11,8 +11,7 @@ import Network.Statsd
 
 main :: IO ()
 main = do
-  env <- getEnvironment
-  let port = maybe 3000 read $ lookup "PORT" env :: Int
+  port <- maybe 3000 read <$> lookupEnv "PORT"
   server port
 
 server :: Int -> IO ()
