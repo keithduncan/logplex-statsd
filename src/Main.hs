@@ -10,9 +10,7 @@ import Text.Logplex.Parser
 import Network.Statsd
 
 main :: IO ()
-main = do
-  port <- maybe 3000 read <$> lookupEnv "PORT"
-  server port
+main = (maybe 3000 read <$> lookupEnv "PORT") >>= server
 
 server :: Int -> IO ()
 server port = scotty port $ do
