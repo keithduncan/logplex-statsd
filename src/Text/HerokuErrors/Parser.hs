@@ -35,7 +35,7 @@ parseHerokuError content = do
   TODO this just parses H class errors, handle R and L class errors too
   <https://devcenter.heroku.com/articles/error-codes>
 -}
-herokuError = P.sepBy kvPair P.space
+herokuError = P.sepBy kvPair P.space <* P.eof
 
 type Key = String
 type Value = String
