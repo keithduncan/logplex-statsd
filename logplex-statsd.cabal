@@ -13,7 +13,7 @@ name:                logplex-statsd
 version:             0.1.0.0
 
 -- A short (one-line) description of the package.
-synopsis:            Report Heroku application errors to a statsd collector for aggregation and storage
+synopsis:            Report Heroku platform errors to a statsd collector for aggregation and storage
 
 -- A longer description of the package.
 -- description:
