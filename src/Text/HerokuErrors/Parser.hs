@@ -12,7 +12,6 @@ import Control.Monad
 import Control.Error.Util
 
 import qualified Text.ParserCombinators.Parsec as P
-import qualified Text.ParserCombinators.Parsec.Error as P
 
 import Text.Printf
 
