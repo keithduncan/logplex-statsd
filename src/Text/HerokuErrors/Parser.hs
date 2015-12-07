@@ -5,14 +5,14 @@ module Text.HerokuErrors.Parser (
   getCode,
   getDescription,
 
-  ParseHerokuError(..),
+  ParseError(..),
 ) where
 
 import Control.Monad
 import Control.Error.Util
 
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+import qualified Text.ParserCombinators.Parsec as P
+import qualified Text.ParserCombinators.Parsec.Error as P
 
 import Text.Printf
 
@@ -20,11 +20,11 @@ data HerokuError = HerokuError { getCode :: String
                                , getDescription :: String
                                }
 
-data ParseHerokuError = ParseError ParseError | NotAtError | MissingCode | MissingDesc
+data ParseError = ParseError P.ParseError | NotAtError | MissingCode | MissingDesc
 
-parseHerokuError :: String -> Either ParseHerokuError HerokuError
+parseHerokuError :: String -> Either ParseError HerokuError
 parseHerokuError content = do
-  values <- mapLeft ParseError $ parse herokuError "(unknown)" content
+  values <- either (Left . ParseError) Right $ P.parse herokuError "(unknown)" content
 
   at <- note NotAtError $ lookup "at" values
 
@@ -36,7 +36,7 @@ parseHerokuError content = do
   TODO this just parses H class errors, handle R and L class errors too
   <https://devcenter.heroku.com/articles/error-codes>
 -}
-herokuError = sepBy kvPair space
+herokuError = P.sepBy kvPair P.space
 
 type Key = String
 type Value = String
@@ -44,15 +44,15 @@ type Pair = (Key, Value)
 
 kvPair = liftM2 (,) key (equals >> value)
 
-key = many1 alphaNum
-equals = char '='
-value = try quotedValue <|> plainValue
+key = P.many1 P.alphaNum
+equals = P.char '='
+value = P.try quotedValue P.<|> plainValue
 
-quotedValue = quoted (many1 $ escaped '\\' "\"]")
-quoted = between doubleQuote doubleQuote
-doubleQuote = char '"'
+quotedValue = quoted (P.many1 $ escaped '\\' "\"]")
+quoted = P.between doubleQuote doubleQuote
+doubleQuote = P.char '"'
 
 escaped echar chars = let echars = echar:chars
-                       in noneOf echars <|> choice (fmap (try . (char echar >>) . char) echars)
+                       in P.noneOf echars P.<|> P.choice (fmap (P.try . (P.char echar >>) . P.char) echars)
 
-plainValue = manyTill alphaNum space
+plainValue = P.manyTill P.alphaNum P.space
