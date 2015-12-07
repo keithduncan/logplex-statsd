@@ -23,21 +23,24 @@ data HerokuError = HerokuError { getCode :: String
 parseHerokuError :: String -> Either P.ParseError HerokuError
 parseHerokuError = P.parse herokuError "(unknown)"
 
-herokuError = P.choice $ P.try <$> [ hError, rError, lError ]
+herokuError = P.choice (P.try <$> [ hError, rError, lError ]) <* P.eof
 
 -- hError
 
 hError = do
-  values <- P.sepBy kvPair P.space <* P.eof
+  values <- P.sepBy kvPair P.space
 
   either fail return $ do
-    at <- note "Missing at key" (lookup "at" values)
+    check "Not an at=error log entry" (== "error") =<< note "Missing at key" (lookup "at" values)
 
-    if at /= "error"
-    then fail "Not an at=error log entry"
-    else HerokuError <$>
-      note "Missing code key" (lookup "code" values) <*>
+    HerokuError <$>
+      (check "Not an H category error" ((/= 'H') . head) =<< note "Missing code key" (lookup "code" values)) <*>
       note "Missing desc key" (lookup "desc" values)
+  where
+    check :: a -> (b -> Bool) -> b -> Either a b
+    check x f y = if f y
+                  then Right y
+                  else Left x
 
 type Key = String
 type Value = String
