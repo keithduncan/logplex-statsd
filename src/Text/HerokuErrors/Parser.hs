@@ -31,7 +31,7 @@ hError = do
   values <- P.sepBy kvPair P.space <* P.eof
 
   either fail return $ do
-    errorValues <- note "Not an H class error" (lookup "at" values)
+    note "Not an H class error" (lookup "at" values)
 
     HerokuError <$>
       note "Missing code key" (lookup "code" values) <*>
