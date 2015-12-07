@@ -4,9 +4,12 @@ module Text.HerokuErrors.Parser (
   HerokuError,
   getCode,
   getDescription,
+
+  ParseHerokuError(..),
 ) where
 
 import Control.Monad
+import Control.Error.Util
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Error
@@ -17,32 +20,22 @@ data HerokuError = HerokuError { getCode :: String
                                , getDescription :: String
                                }
 
-parseHerokuError :: String -> Either String HerokuError
-parseHerokuError content = do
-  values <- mapLeft (\err -> head $ messageString <$> errorMessages err) $ parse herokuError "(unknown)" content
+data ParseHerokuError = ParseError ParseError | NotAtError | MissingCode | MissingDesc
 
-  at <- hlookup "at" values
+parseHerokuError :: String -> Either ParseHerokuError HerokuError
+parseHerokuError content = do
+  values <- mapLeft ParseError $ parse herokuError "(unknown)" content
+
+  at <- note NotAtError $ lookup "at" values
 
   HerokuError <$>
-    hlookup "code" values <*>
-    hlookup "desc" values
-
-hlookup :: String -> [(String, a)] -> Either String a
-hlookup k vs = maybe (Left $ printf "missing `$s` key" k) Right (lookup k vs)
-
-mapLeft :: (a -> c) -> Either a b -> Either c b
-mapLeft f (Left x) = Left $ f x
-mapLeft _ (Right x) = Right x
+    note MissingCode (lookup "code" values) <*>
+    note MissingDesc (lookup "desc" values)
 
 {-
-  at <- lookup "at" values
-  case at of
-    Nothing  -> fail "couldn't parse heroku log entry as error"
-    Just err -> HerokuError <$>
-      lookup "code" values <*>
-      lookup "desc" values
-      -}
-
+  TODO this just parses H class errors, handle R and L class errors too
+  <https://devcenter.heroku.com/articles/error-codes>
+-}
 herokuError = sepBy kvPair space
 
 type Key = String
