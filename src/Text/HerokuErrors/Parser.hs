@@ -31,9 +31,11 @@ hError = do
   values <- P.sepBy kvPair P.space <* P.eof
 
   either fail return $ do
-    note "Not an H class error" (lookup "at" values)
+    at <- note "Missing at key" (lookup "at" values)
 
-    HerokuError <$>
+    if at /= "error"
+    then fail "Not an at=error log entry"
+    else HerokuError <$>
       note "Missing code key" (lookup "code" values) <*>
       note "Missing desc key" (lookup "desc" values)
 
