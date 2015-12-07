@@ -6,8 +6,6 @@ module Text.HerokuErrors.Parser (
   HerokuError,
   getCode,
   getDescription,
-
-  ParseError(..),
 ) where
 
 import Control.Monad
