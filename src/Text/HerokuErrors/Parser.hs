@@ -41,7 +41,7 @@ kvPair = liftM2 (,) key (equals >> value)
 
 key = P.many1 P.alphaNum
 equals = P.char '='
-value = P.choice $ P.try <$> [ quotedValue, plainValue, return "" ]
+value = P.choice $ P.try <$> [ quotedValue, plainValue ]
 
 quotedValue = quoted (P.many1 $ escaped '\\' "\"]")
 quoted = P.between doubleQuote doubleQuote
@@ -50,7 +50,7 @@ doubleQuote = P.char '"'
 escaped echar chars = let echars = echar:chars
                        in P.noneOf echars P.<|> P.choice (fmap (P.try . (P.char echar >>) . P.char) echars)
 
-plainValue = P.many1 P.alphaNum
+plainValue = P.many (P.noneOf " ")
 
 -- rError
 
