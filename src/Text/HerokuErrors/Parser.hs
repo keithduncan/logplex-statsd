@@ -18,7 +18,7 @@ import Text.Printf
 
 data HerokuError = HerokuError { getCode :: String
                                , getDescription :: String
-                               }
+                               } deriving (Show)
 
 parseHerokuError :: String -> Either P.ParseError HerokuError
 parseHerokuError = P.parse herokuError "(unknown)"
