@@ -3,22 +3,17 @@
 module Text.HerokuErrors.Parser (
   parseHerokuError,
 
-  HerokuError,
-  getCode,
-  getDescription,
+  HerokuError(..),
 ) where
 
 import Control.Monad
 import Control.Error.Util
 
 import qualified Text.ParserCombinators.Parsec as P
-import qualified Text.ParserCombinators.Parsec.Error as P
-
-import Text.Printf
 
 data HerokuError = HerokuError { getCode :: String
                                , getDescription :: String
-                               } deriving (Show)
+                               } deriving (Show, Eq)
 
 parseHerokuError :: String -> Either P.ParseError HerokuError
 parseHerokuError = P.parse herokuError "(unknown)"
@@ -41,10 +36,6 @@ hError = do
     check x f y = if f y
                   then Right y
                   else Left x
-
-type Key = String
-type Value = String
-type Pair = (Key, Value)
 
 kvPair = liftM2 (,) key (equals >> value)
 
