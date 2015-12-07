@@ -41,7 +41,7 @@ kvPair = liftM2 (,) key (equals >> value)
 
 key = P.many1 P.alphaNum
 equals = P.char '='
-value = P.try quotedValue P.<|> plainValue
+value = P.choice $ P.try <$> [ quotedValue, plainValue, return "" ]
 
 quotedValue = quoted (P.many1 $ escaped '\\' "\"]")
 quoted = P.between doubleQuote doubleQuote
