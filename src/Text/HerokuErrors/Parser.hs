@@ -54,7 +54,7 @@ doubleQuote = P.char '"'
 escaped echar chars = let echars = echar:chars
                        in P.noneOf echars P.<|> P.choice (fmap (P.try . (P.char echar >>) . P.char) echars)
 
-plainValue = P.manyTill P.alphaNum P.space
+plainValue = P.many1 P.alphaNum
 
 -- rError
 
