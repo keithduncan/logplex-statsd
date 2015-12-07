@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Text.HerokuErrors.Parser (
   parseHerokuError,
 
@@ -12,6 +14,7 @@ import Control.Monad
 import Control.Error.Util
 
 import qualified Text.ParserCombinators.Parsec as P
+import qualified Text.ParserCombinators.Parsec.Error as P
 
 import Text.Printf
 
@@ -19,27 +22,22 @@ data HerokuError = HerokuError { getCode :: String
                                , getDescription :: String
                                }
 
-data ParseError = ParseError P.ParseError | NotAtError | MissingCode | MissingDesc
+parseHerokuError :: String -> Either P.ParseError HerokuError
+parseHerokuError = P.parse herokuError "(unknown)"
 
-parseHerokuError :: String -> Either ParseError HerokuError
-parseHerokuError content = do
-  values <- either (Left . ParseError) Right $ P.parse herokuError "(unknown)" content
-
-  at <- note NotAtError $ lookup "at" values
-
-  HerokuError <$>
-    note MissingCode (lookup "code" values) <*>
-    note MissingDesc (lookup "desc" values)
-
-{-
-  TODO this just parses H class errors, handle R and L class errors too
-  <https://devcenter.heroku.com/articles/error-codes>
--}
-herokuError = P.choice $ P.try <$> [ hError, rError ]
+herokuError = P.choice $ P.try <$> [ hError, rError, lError ]
 
 -- hError
 
-hError = P.sepBy kvPair P.space <* P.eof
+hError = do
+  values <- P.sepBy kvPair P.space <* P.eof
+
+  either fail return $ do
+    errorValues <- note "Not an H class error" (lookup "at" values)
+
+    HerokuError <$>
+      note "Missing code key" (lookup "code" values) <*>
+      note "Missing desc key" (lookup "desc" values)
 
 type Key = String
 type Value = String
@@ -62,9 +60,16 @@ plainValue = P.manyTill P.alphaNum P.space
 
 -- rError
 
-rError = do
-  code <- P.string "Error" >> P.space >> rVal
-  desc <- P.space >> P.between (P.char '(') (P.char ')') (P.many1 $ P.noneOf ")")
-  return [("at", "error"), ("code", code), ("desc", desc)]
+rError = genericError 'R'
 
-rVal = liftM2 (:) (P.char 'R') (P.many1 P.digit)
+-- lError
+
+lError = genericError 'L'
+
+-- Generic
+
+genericError category = HerokuError <$>
+  (P.string "Error" >> P.space >> errorCode category) <*>
+  (P.space >> P.many1 P.anyChar)
+
+errorCode category = liftM2 (:) (P.char category) (P.many1 P.digit)
