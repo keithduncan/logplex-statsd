@@ -29,7 +29,7 @@ hError = do
     check "Not an at=error log entry" (== "error") =<< note "Missing at key" (lookup "at" values)
 
     HerokuError <$>
-      (check "Not an H category error" ((/= 'H') . head) =<< note "Missing code key" (lookup "code" values)) <*>
+      (check "Not an H category error" ((== 'H') . head) =<< note "Missing code key" (lookup "code" values)) <*>
       note "Missing desc key" (lookup "desc" values)
   where
     check :: a -> (b -> Bool) -> b -> Either a b
