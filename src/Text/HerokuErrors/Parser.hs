@@ -9,20 +9,30 @@ module Text.HerokuErrors.Parser (
 import Control.Monad
 
 import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Error
+
+import Text.Printf
 
 data HerokuError = HerokuError { getCode :: String
                                , getDescription :: String
                                }
 
-parseHerokuError :: String -> Maybe HerokuError
+parseHerokuError :: String -> Either String HerokuError
 parseHerokuError content = do
-  values <- either (const Nothing) Just $ parse herokuError "(unknown)" content
+  values <- mapLeft (\err -> head $ messageString <$> errorMessages err) $ parse herokuError "(unknown)" content
 
-  at <- lookup "at" values
+  at <- hlookup "at" values
 
   HerokuError <$>
-    lookup "code" values <*>
-    lookup "desc" values
+    hlookup "code" values <*>
+    hlookup "desc" values
+
+hlookup :: String -> [(String, a)] -> Either String a
+hlookup k vs = maybe (Left $ printf "missing `$s` key" k) Right (lookup k vs)
+
+mapLeft :: (a -> c) -> Either a b -> Either c b
+mapLeft f (Left x) = Left $ f x
+mapLeft _ (Right x) = Right x
 
 {-
   at <- lookup "at" values
