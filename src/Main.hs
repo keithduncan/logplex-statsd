@@ -33,7 +33,7 @@ server port = scotty port $ do
   middleware logStdoutDev
 
   post "/:app_name/logs" $ do
-    checkAuth
+    checkAuthentication
 
 {-
     1. check per-app authentication -> 401 unauthorized
@@ -53,19 +53,21 @@ server port = scotty port $ do
 -}
     text $ T.pack "OK"
 
-checkAuth :: ActionM ()
-checkAuth = do
+checkAuthentication :: ActionM ()
+checkAuthentication = do
   app <- param "app_name"
   auth <- maybe "" T.unpack <$> header "Authorization" >>= either (fail "couldn't parse Authorization header") return . parseCredentials
 
   check <- liftIO (checkAppAuthentication app auth)
 
-  bool unauthorized (return ()) check
+  bool unauthenticated (return ()) check
 
-unauthorized :: ActionM ()
-unauthorized = do
+unauthenticated :: ActionM ()
+unauthenticated = do
   status unauthorized401
   json Null
 
+-- TODO make this variable based on the app name, single global authentication
+-- credentials are bad practice.
 checkAppAuthentication :: String -> Credentials -> IO Bool
 checkAppAuthentication app auth = return True
