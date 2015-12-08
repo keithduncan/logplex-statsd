@@ -15,13 +15,14 @@ import Data.Aeson (Value (Null))
 import Data.Char
 import Data.Bool
 import Data.Maybe
-import Data.Either.Combinators
+import Data.Either
+import Data.Either.Combinators (fromRight)
 import qualified Data.ByteString.Lazy.Char8 as BC
 
 import Text.Logplex.Parser
 import Text.Syslog.Parser
 import Text.HerokuErrors.Parser
-import Network.Statsd
+import Network.Statsd.Cluster
 
 {-
   1. Put statsd collector cluster config into environment
@@ -30,6 +31,9 @@ import Network.Statsd
 
 main :: IO ()
 main = (maybe 3000 read <$> lookupEnv "PORT") >>= server
+
+metricsCluster :: Cluster
+metricsCluster = error "no cluster config"
 
 server :: Int -> IO ()
 server port = scotty port $ do
@@ -47,9 +51,18 @@ server port = scotty port $ do
 
     checkAuthentication
 
+    app <- param "app_name" :: ActionM T.Text
     logs <- parseLogs
 
-    text $ T.pack "OK"
+    let errors = rights $ parseHerokuError <$> catMaybes (getMessage <$> logs)
+
+    let statPrefix = T.unpack app ++ "heroku.errors"
+
+    liftIO $ forM_ errors $ \err ->
+      let stat = statPrefix ++ "." ++ getCode err
+       in increment metricsCluster stat
+
+    text "OK"
 
 checkAuthentication :: ActionM ()
 checkAuthentication = do
