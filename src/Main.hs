@@ -17,7 +17,7 @@ import Data.Char
 import Data.Bool
 import Data.Maybe
 import Data.Either
-import Data.Either.Combinators (fromRight)
+import Data.Either.Combinators (fromRight, fromRight')
 import Data.Map
 import qualified Data.ByteString.Lazy.Char8 as BC
 
@@ -79,9 +79,14 @@ server port = scotty port $ do
 checkAuthentication :: ActionM ()
 checkAuthentication = do
   app <- param "app_name"
-  auth <- maybe "" T.unpack <$> header "Authorization" >>= either (fail "couldn't parse Authorization header") return . parseCredentials
 
-  check <- liftIO (checkAppAuthentication app auth)
+  auth <- header "Authorization" >>= \h -> return $ T.unpack <$> h
+  unless (isJust auth) unauthenticated
+
+  let credentials = parseCredentials $ fromJust auth
+  unless (isRight credentials) unauthenticated
+
+  check <- liftIO (checkAppAuthentication app (fromRight' credentials))
 
   bool unauthenticated (return ()) check
 
@@ -100,7 +105,7 @@ parseLogs = do
   let parse = parseLogplex logplexDocument
   unless (isRight parse) unprocessable
 
-  return $ fromRight [] parse
+  return $ fromRight' parse
 
 unauthenticated = status unauthorized401 >> json A.Null
 notAcceptable = status notAcceptable406 >> json A.Null
