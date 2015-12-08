@@ -10,13 +10,14 @@ import Network.HTTP.Authentication.Basic
 import Control.Monad
 import Control.Monad.Trans
 
-import Data.Text.Lazy as T
+import qualified Data.Text.Lazy as T
 import Data.Aeson (Value (Null))
 import Data.Char
 import Data.Bool
 import Data.Maybe
 
 import Text.Logplex.Parser
+import Text.Syslog.Parser
 import Text.HerokuErrors.Parser
 import Network.Statsd
 
@@ -33,24 +34,19 @@ server port = scotty port $ do
   middleware logStdoutDev
 
   post "/:app_name/logs" $ do
+    {-
+        1. check per-app authentication -> 401 unauthorized
+        2. check content-type -> 406 not acceptable
+        3. parse body as application/logplex-1 -> 422 unprocessable
+        4. map log entry messages
+        5. parse messages as heroku errors
+        6. map each error to a statsd client increment action
+    -}
+
     checkAuthentication
 
-{-
-    1. check per-app authentication -> 401 unauthorized
-    2. check content-type -> 406 not acceptable
-    3. parse body as application/logplex-1 -> 422 unprocessable
-    4. map log entry messages
-    5. parse messages as heroku errors
-    6. map each error to a statsd client increment action
+    logs <- parseLogs
 
-    contentType <- header "Content-Type"
-    if (toLower <$> contentType) /= (toLower <$> "application/logplex-1")
-    then error "unknown content-type status 406 not accepted"
-    else error "cannot parse logplex doc"
-
-    body <- body
-    logEntries <- parseLogplex body
--}
     text $ T.pack "OK"
 
 checkAuthentication :: ActionM ()
@@ -62,12 +58,20 @@ checkAuthentication = do
 
   bool unauthenticated (return ()) check
 
-unauthenticated :: ActionM ()
-unauthenticated = do
-  status unauthorized401
-  json Null
-
 -- TODO make this variable based on the app name, single global authentication
 -- credentials are bad practice.
 checkAppAuthentication :: String -> Credentials -> IO Bool
 checkAppAuthentication app auth = return True
+
+parseLogs :: ActionM [LogEntry]
+parseLogs = do
+  contentType <- T.unpack . fromMaybe "" <$> header "Content-Type"
+  bool notAcceptable (return ()) ((toLower <$> contentType) == "application/logplex-1")
+
+  body <- body
+
+  return []
+
+unauthenticated = status unauthorized401 >> json Null
+notAcceptable = status notAcceptable406 >> json Null
+unprocessable = status (Status 422 "Unprocessable") >> json Null
