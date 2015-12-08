@@ -28,7 +28,8 @@ hError = do
   values <- P.sepBy kvPair P.space
 
   either fail return $ do
-    check "`at` key should be `error`" (== "error") =<< note "log line should have an `at` key" (lookup "at" values)
+    let atValue = note "log line should have an `at` key" (lookup "at" values)
+    at <- check "`at` key should be `error`" (== "error") =<< atValue
 
     HerokuError <$>
       (check "`code` key should start with 'H'" ((== 'H') . head) =<< note "log line should have a `code` key" (lookup "code" values)) <*>
