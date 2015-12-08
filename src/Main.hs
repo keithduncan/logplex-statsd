@@ -5,6 +5,7 @@ import System.Environment
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
 import Network.HTTP.Types
+import Network.HTTP.Authentication.Basic
 
 import Control.Monad
 import Control.Monad.Trans
@@ -55,9 +56,9 @@ server port = scotty port $ do
 checkAuth :: ActionM ()
 checkAuth = do
   app <- param "app_name"
-  auth <- fromMaybe "" <$> header "Authorization"
+  auth <- maybe "" T.unpack <$> header "Authorization" >>= either (fail "couldn't parse Authorization header") return . parseCredentials
 
-  check <- liftIO (checkAppAuthentication app $ T.unpack auth)
+  check <- liftIO (checkAppAuthentication app auth)
 
   bool unauthorized (return ()) check
 
@@ -66,5 +67,5 @@ unauthorized = do
   status unauthorized401
   json Null
 
-checkAppAuthentication :: String -> String -> IO Bool
+checkAppAuthentication :: String -> Credentials -> IO Bool
 checkAppAuthentication app auth = return True
