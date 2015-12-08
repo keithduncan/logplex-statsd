@@ -26,11 +26,11 @@ hError = do
   values <- P.sepBy kvPair P.space
 
   either fail return $ do
-    check "Not an at=error log entry" (== "error") =<< note "Missing at key" (lookup "at" values)
+    check "`at` key should be `error`" (== "error") =<< note "log line should have an `at` key" (lookup "at" values)
 
     HerokuError <$>
-      (check "Not an H category error" ((== 'H') . head) =<< note "Missing code key" (lookup "code" values)) <*>
-      note "Missing desc key" (lookup "desc" values)
+      (check "`code` key should start with 'H'" ((== 'H') . head) =<< note "log line should have a `code` key" (lookup "code" values)) <*>
+      note "log line should have a `desc` key" (lookup "desc" values)
   where
     check :: a -> (b -> Bool) -> b -> Either a b
     check x f y = if f y
