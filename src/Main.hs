@@ -28,18 +28,16 @@ server port = scotty port $ do
   middleware logStdoutDev
 
   post "/:app_name/logs" $ do
-    auth <- header "Authorization"
+    checkAuth
 
 {-
-    1. get app name
-    2. check per-app authentication
-    3. check content-type
-    4. parse body as application/logplex-1
-    5. map log entry messages
-    6. parse messages as heroku errors
-    7. map each error to a statsd client increment action
+    1. check per-app authentication -> 401 unauthorized
+    2. check content-type -> 406 not acceptable
+    3. parse body as application/logplex-1 -> 422 unprocessable
+    4. map log entry messages
+    5. parse messages as heroku errors
+    6. map each error to a statsd client increment action
 
-    app <- param "app_name"
     contentType <- header "Content-Type"
     if (toLower <$> contentType) /= (toLower <$> "application/logplex-1")
     then error "unknown content-type status 406 not accepted"
