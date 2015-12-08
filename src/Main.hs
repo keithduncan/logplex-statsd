@@ -1,8 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import System.Environment
+
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
+import Network.HTTP.Types
 
 import Control.Monad
 import Control.Monad.Trans
@@ -10,6 +12,8 @@ import Control.Monad.Trans
 import Data.Text.Lazy as T
 import Data.Aeson (Value (Null))
 import Data.Char
+import Data.Bool
+import Data.Maybe
 
 import Text.Logplex.Parser
 import Text.HerokuErrors.Parser
@@ -47,3 +51,20 @@ server port = scotty port $ do
     logEntries <- parseLogplex body
 -}
     text $ T.pack "OK"
+
+checkAuth :: ActionM ()
+checkAuth = do
+  app <- param "app_name"
+  auth <- fromMaybe "" <$> header "Authorization"
+
+  check <- liftIO (checkAppAuthentication app $ T.unpack auth)
+
+  bool unauthorized (return ()) check
+
+unauthorized :: ActionM ()
+unauthorized = do
+  status unauthorized401
+  json Null
+
+checkAppAuthentication :: String -> String -> IO Bool
+checkAppAuthentication app auth = return True
