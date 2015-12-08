@@ -9,6 +9,8 @@ module Text.HerokuErrors.Parser (
 import Control.Monad
 import Control.Error.Util
 
+import Data.Maybe
+
 import qualified Text.ParserCombinators.Parsec as P
 
 data HerokuError = HerokuError { getCode :: String
@@ -64,6 +66,6 @@ lError = genericError 'L'
 
 genericError category = HerokuError <$>
   (P.string "Error" >> P.space >> errorCode category) <*>
-  (P.space >> P.many1 P.anyChar)
+  (fromMaybe "" <$> P.optionMaybe (P.space >> P.many1 P.anyChar))
 
 errorCode category = liftM2 (:) (P.char category) (P.many1 P.digit)
