@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import System.Environment
+import System.Time
 
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
@@ -11,12 +12,13 @@ import Control.Monad
 import Control.Monad.Trans
 
 import qualified Data.Text.Lazy as T
-import Data.Aeson (Value (Null))
+import qualified Data.Aeson as A
 import Data.Char
 import Data.Bool
 import Data.Maybe
 import Data.Either
 import Data.Either.Combinators (fromRight)
+import Data.Map
 import qualified Data.ByteString.Lazy.Char8 as BC
 
 import Text.Logplex.Parser
@@ -41,6 +43,13 @@ metricsCluster = error "no cluster config"
 server :: Int -> IO ()
 server port = scotty port $ do
   middleware logStdoutDev
+
+  get "/_ping" $ do
+    (TOD sec _) <- liftIO getClockTime
+    let ping = fromList [("now", show sec), ("status", "ok")] :: Map String String
+
+    status ok200
+    json ping
 
   post "/:app_name/logs" $ do
     {-
@@ -93,7 +102,7 @@ parseLogs = do
 
   return $ fromRight [] parse
 
-unauthenticated = status unauthorized401 >> json Null
-notAcceptable = status notAcceptable406 >> json Null
-unprocessable = status (Status 422 "Unprocessable") >> json Null
-created = status created201 >> json Null
+unauthenticated = status unauthorized401 >> json A.Null
+notAcceptable = status notAcceptable406 >> json A.Null
+unprocessable = status (Status 422 "Unprocessable") >> json A.Null
+created = status created201 >> json A.Null
