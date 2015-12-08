@@ -62,7 +62,7 @@ server port = scotty port $ do
       let stat = statPrefix ++ "." ++ getCode err
        in increment metricsCluster stat
 
-    text "OK"
+    created
 
 checkAuthentication :: ActionM ()
 checkAuthentication = do
@@ -93,3 +93,4 @@ parseLogs = do
 unauthenticated = status unauthorized401 >> json Null
 notAcceptable = status notAcceptable406 >> json Null
 unprocessable = status (Status 422 "Unprocessable") >> json Null
+created = status created201 >> json Null
