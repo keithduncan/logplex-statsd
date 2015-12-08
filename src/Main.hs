@@ -15,6 +15,7 @@ import Data.Aeson (Value (Null))
 import Data.Char
 import Data.Bool
 import Data.Maybe
+import Data.Either.Combinators
 import qualified Data.ByteString.Lazy.Char8 as BC
 
 import Text.Logplex.Parser
@@ -71,7 +72,10 @@ parseLogs = do
 
   logplexDocument <- BC.unpack <$> body
 
-  either (fail "couldn't parse logplex document") return $ parseLogplex logplexDocument
+  let parse = parseLogplex logplexDocument
+  unless (isRight parse) unprocessable
+
+  return $ fromRight [] parse
 
 unauthenticated = status unauthorized401 >> json Null
 notAcceptable = status notAcceptable406 >> json Null

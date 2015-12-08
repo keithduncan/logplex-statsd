@@ -72,6 +72,7 @@ executable logplex-statsd
                , http-types >= 0.9 && <0.10
                , base64-bytestring >=1.0.0.1 && <1.1
                , bytestring >=0.10.6.0 && <0.11
+               , either >=4.4.1 && <4.5
 
   -- Directories containing source files.
   hs-source-dirs:      src
