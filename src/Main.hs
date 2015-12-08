@@ -15,6 +15,7 @@ import Data.Aeson (Value (Null))
 import Data.Char
 import Data.Bool
 import Data.Maybe
+import qualified Data.ByteString.Lazy.Char8 as BC
 
 import Text.Logplex.Parser
 import Text.Syslog.Parser
@@ -68,9 +69,9 @@ parseLogs = do
   contentType <- T.unpack . fromMaybe "" <$> header "Content-Type"
   bool notAcceptable (return ()) ((toLower <$> contentType) == "application/logplex-1")
 
-  body <- body
+  logplexDocument <- BC.unpack <$> body
 
-  return []
+  either (fail "couldn't parse logplex document") return $ parseLogplex logplexDocument
 
 unauthenticated = status unauthorized401 >> json Null
 notAcceptable = status notAcceptable406 >> json Null
