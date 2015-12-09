@@ -83,7 +83,7 @@ checkAuthentication :: ActionM Bool
 checkAuthentication = do
   app <- param "app_name"
 
-  let unauthenticated = unauthenticated >> return False
+  let unauthenticated = Main.unauthenticated >> return False
 
   auth <- header "Authorization" >>= \h -> return $ T.unpack <$> h
   case auth of
