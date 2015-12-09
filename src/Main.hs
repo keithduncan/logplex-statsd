@@ -3,6 +3,8 @@
 import System.Environment
 import System.Time
 
+import Debug.Trace
+
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
 import Network.HTTP.Types
@@ -25,7 +27,9 @@ import qualified Data.ByteString.Lazy.Char8 as BC
 import Text.Logplex.Parser
 import Text.Syslog.Parser
 import Text.HerokuErrors.Parser
-import Network.Statsd.Cluster
+
+import qualified Network.Statsd as Stats
+import qualified Network.Statsd.Cluster as StatsCluster
 
 {-
   TODO
@@ -38,7 +42,7 @@ import Network.Statsd.Cluster
 main :: IO ()
 main = (maybe 3000 read <$> lookupEnv "PORT") >>= server
 
-metricsCluster :: Cluster
+metricsCluster :: StatsCluster.Cluster
 metricsCluster = error "no cluster config"
 
 server :: Int -> IO ()
@@ -74,7 +78,7 @@ server port = scotty port $ do
 
         liftIO $ forM_ errors $ \err ->
           let stat = statPrefix ++ "." ++ getCode err
-           in increment metricsCluster stat
+           in StatsCluster.increment metricsCluster stat
 
         created
 
