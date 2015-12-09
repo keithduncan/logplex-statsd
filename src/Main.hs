@@ -102,9 +102,7 @@ checkAppAuthentication :: String -> Credentials -> IO Bool
 checkAppAuthentication app auth = do
   credConfig <- lookupEnv "API_CREDENTIALS"
 
-  let creds = breakOn ':' <$> credConfig
-
-  return $ case creds of
+  return $ case breakOn ':' <$> credConfig of
     Nothing           -> False
     Just (user, pass) -> auth == Credentials user pass
 
