@@ -8,12 +8,17 @@ import Control.Monad.Except()
 
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as B
+import Data.SecureMem
 
 import Text.ParserCombinators.Parsec
 
 data Credentials = Credentials { getUsername :: String
                                , getPassword :: String
-                               } deriving (Show, Eq)
+                               } deriving (Show)
+
+instance Eq Credentials where
+  (Credentials u1 p1) == (Credentials u2 p2) = toSecureMem (B.pack u1) == toSecureMem (B.pack u2) &&
+                                               toSecureMem (B.pack p1) == toSecureMem (B.pack p2)
 
 encode :: Credentials -> String
 encode c = let concat' = mconcat [getUsername c, ":", getPassword c]

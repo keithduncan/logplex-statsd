@@ -18,6 +18,7 @@ import Data.Char
 import Data.Maybe
 import Data.Either (rights)
 import Data.Either.Combinators (fromRight, fromRight')
+import Data.List (uncons)
 import qualified Data.Map as M
 import qualified Data.ByteString.Lazy.Char8 as BC
 
@@ -98,7 +99,24 @@ checkAuthentication = do
 -- TODO make this variable based on the app name, single global authentication
 -- credentials are bad practice.
 checkAppAuthentication :: String -> Credentials -> IO Bool
-checkAppAuthentication app auth = return True
+checkAppAuthentication app auth = do
+  credConfig <- lookupEnv "API_CREDENTIALS"
+
+  let creds = breakOn ':' <$> credConfig
+
+  return $ case creds of
+    Nothing           -> False
+    Just (user, pass) -> auth == Credentials user pass
+
+  where
+    breakOn :: Eq a => a -> [a] -> ([a], [a])
+    breakOn x xs = let p = (/= x)
+                       head' = takeWhile p xs
+                       tail' = dropWhile p xs
+                       tail'' = case uncons tail' of
+                                  Nothing     -> tail'
+                                  Just (_, y) -> y
+                    in (head', tail'')
 
 parseLogs :: ActionM [LogEntry]
 parseLogs = do
