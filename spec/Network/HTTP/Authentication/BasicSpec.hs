@@ -24,3 +24,7 @@ spec = do
 
     it "should allow empty usernames" $ do
       parseCredentials "Basic OnBhc3M=" `shouldBe` (Right $ Credentials "" "pass")
+
+  describe "Basic Auth Encoder" $ do
+    it "should encode credentials" $
+      encode (Credentials "Aladdin" "open sesame") `shouldBe` "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="

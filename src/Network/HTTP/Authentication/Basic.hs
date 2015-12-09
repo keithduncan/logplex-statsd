@@ -1,6 +1,7 @@
 module Network.HTTP.Authentication.Basic (
   Credentials(..),
   parseCredentials,
+  encode,
 ) where
 
 import Control.Monad.Except()
