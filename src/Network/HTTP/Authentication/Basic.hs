@@ -21,13 +21,16 @@ instance Show Credentials where
 
 parseCredentials :: String -> Either ParseError Credentials
 parseCredentials content = do
-  encoded <- parse parseBasicCredentials "(unknown)" content
-  decoded <- either (fail "not a base64 string") return $ (decode . B.pack) encoded
+  decoded <- parse parseBasicCredentials "(unknown)" content
 
-  let (user, pass) = break (/= ':') (B.unpack decoded)
+  let (user, pass) = break (/= ':') decoded
 
   return $ Credentials user pass
 
-parseBasicCredentials = string "Basic" >> space >> many1 base64Char
+parseBasicCredentials = string "Basic" >> space >> base64String
 
 base64Char = oneOf ("+/" ++ ['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
+
+base64String = do
+  encoded <- many1 base64Char
+  either (fail "not a base64 string") (return . B.unpack) $ decode (B.pack encoded)
