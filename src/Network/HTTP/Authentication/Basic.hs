@@ -3,8 +3,7 @@ module Network.HTTP.Authentication.Basic (
   parseCredentials,
 ) where
 
-import Control.Monad
-import Control.Monad.Except
+import Control.Monad.Except()
 
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as B
@@ -13,7 +12,7 @@ import Text.ParserCombinators.Parsec
 
 data Credentials = Credentials { getUsername :: String
                                , getPassword :: String
-                               } deriving (Show)
+                               } deriving (Show, Eq)
 
 encode :: Credentials -> String
 encode c = let concat' = mconcat [getUsername c, ":", getPassword c]
