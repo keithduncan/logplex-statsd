@@ -10,15 +10,15 @@ import Network.HTTP.Authentication.Basic
 
 import Control.Monad
 import Control.Monad.Trans
+import Control.Error.Util
 
 import qualified Data.Text.Lazy as T
 import qualified Data.Aeson as A
 import Data.Char
-import Data.Bool
 import Data.Maybe
-import Data.Either
+import Data.Either (rights)
 import Data.Either.Combinators (fromRight, fromRight')
-import Data.Map
+import qualified Data.Map as M
 import qualified Data.ByteString.Lazy.Char8 as BC
 
 import Text.Logplex.Parser
@@ -46,7 +46,7 @@ server port = scotty port $ do
 
   get "/_ping" $ do
     (TOD sec _) <- liftIO getClockTime
-    let ping = fromList [("now", show sec), ("status", "ok")] :: Map String String
+    let ping = M.fromList [("now", show sec), ("status", "ok")] :: M.Map String String
 
     status ok200
     json ping
@@ -61,34 +61,39 @@ server port = scotty port $ do
         6. map each error to a statsd client increment action
     -}
 
-    checkAuthentication
+    auth <- checkAuthentication
+    when auth $ do
+      app <- param "app_name" :: ActionM T.Text
+      logs <- parseLogs
 
-    app <- param "app_name" :: ActionM T.Text
-    logs <- parseLogs
+      unless (null logs) $ do
+        let errors = rights $ parseHerokuError <$> catMaybes (getMessage <$> logs)
 
-    let errors = rights $ parseHerokuError <$> catMaybes (getMessage <$> logs)
+        let statPrefix = T.unpack app ++ "heroku.errors"
 
-    let statPrefix = T.unpack app ++ "heroku.errors"
+        liftIO $ forM_ errors $ \err ->
+          let stat = statPrefix ++ "." ++ getCode err
+           in increment metricsCluster stat
 
-    liftIO $ forM_ errors $ \err ->
-      let stat = statPrefix ++ "." ++ getCode err
-       in increment metricsCluster stat
+        created
 
-    created
-
-checkAuthentication :: ActionM ()
+-- TODO make this 'throw' an error which is handled in the application to mean
+-- unauthenticated
+checkAuthentication :: ActionM Bool
 checkAuthentication = do
   app <- param "app_name"
 
+  let unauthenticated = unauthenticated >> return False
+
   auth <- header "Authorization" >>= \h -> return $ T.unpack <$> h
-  unless (isJust auth) unauthenticated
-
-  let credentials = parseCredentials $ fromJust auth
-  unless (isRight credentials) unauthenticated
-
-  check <- liftIO (checkAppAuthentication app (fromRight' credentials))
-
-  bool unauthenticated (return ()) check
+  case auth of
+    Nothing -> unauthenticated
+    Just a  -> let credentials = parseCredentials a
+               in case credentials of
+                 Left er -> unauthenticated
+                 Right c -> do
+                   check <- liftIO (checkAppAuthentication app c)
+                   bool unauthenticated (return True) check
 
 -- TODO make this variable based on the app name, single global authentication
 -- credentials are bad practice.
@@ -98,14 +103,14 @@ checkAppAuthentication app auth = return True
 parseLogs :: ActionM [LogEntry]
 parseLogs = do
   contentType <- T.unpack . fromMaybe "" <$> header "Content-Type"
-  bool notAcceptable (return ()) ((toLower <$> contentType) == "application/logplex-1")
+  if (toLower <$> contentType) /= "application/logplex-1"
+  then notAcceptable >> return []
+  else do
+    logplexDocument <- BC.unpack <$> body
 
-  logplexDocument <- BC.unpack <$> body
-
-  let parse = parseLogplex logplexDocument
-  unless (isRight parse) unprocessable
-
-  return $ fromRight' parse
+    case parseLogplex logplexDocument of
+      Left _     -> unprocessable >> return []
+      Right logs -> return logs
 
 unauthenticated = status unauthorized401 >> json A.Null
 notAcceptable = status notAcceptable406 >> json A.Null
