@@ -36,7 +36,6 @@ import qualified Network.Statsd.Cluster as StatsCluster
 
   1. Put statsd collector cluster config into environment
   2. Make the cluster / connected statsd socket part of a ReaderT config
-  3. Implement environment based authentication in checkAppAuthentication
 -}
 
 main :: IO ()
