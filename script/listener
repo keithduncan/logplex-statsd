@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'socket'
+
+server = UDPSocket.new.tap do |s|
+  s.bind("0.0.0.0", 8126)
+end
+
+loop do
+  p server.recvmsg
+end
