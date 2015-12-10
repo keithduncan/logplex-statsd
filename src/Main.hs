@@ -3,8 +3,6 @@
 import System.Environment
 import System.Time
 
-import Debug.Trace
-
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
 import Network.HTTP.Types
@@ -16,17 +14,16 @@ import Control.Error.Util
 
 import qualified Data.Text.Lazy as T
 import qualified Data.Aeson as A
-import Data.Char
 import Data.Maybe
 import Data.Either (rights)
 import Data.Either.Combinators (fromRight, fromRight')
-import Data.List (uncons)
 import qualified Data.Map as M
 import qualified Data.ByteString.Lazy.Char8 as BC
 
 import Text.Logplex.Parser
 import Text.Syslog.Parser
 import Text.HerokuErrors.Parser
+import Credentials
 
 import qualified Network.Statsd as Stats
 import qualified Network.Statsd.Cluster as StatsCluster
@@ -41,8 +38,10 @@ import qualified Network.Statsd.Cluster as StatsCluster
 main :: IO ()
 main = (maybe 3000 read <$> lookupEnv "PORT") >>= server
 
-metricsCluster :: StatsCluster.Cluster
-metricsCluster = error "no cluster config"
+metricsCluster :: IO StatsCluster.Cluster
+metricsCluster = let configurations = []
+                     metricsClients = Stats.fromURI <$> configurations
+                  in return $ StatsCluster.cluster metricsClients
 
 server :: Int -> IO ()
 server port = scotty port $ do
@@ -103,23 +102,8 @@ checkAuthentication = do
 
 -- TODO make this variable based on the app name, single global authentication
 -- credentials are bad practice.
-checkAppAuthentication :: String -> Credentials -> IO Bool
-checkAppAuthentication app auth = do
-  credConfig <- lookupEnv "API_CREDENTIALS"
-
-  return $ case breakOn ':' <$> credConfig of
-    Nothing           -> False
-    Just (user, pass) -> auth == Credentials user pass
-
-  where
-    breakOn :: Eq a => a -> [a] -> ([a], [a])
-    breakOn x xs = let p = (/= x)
-                       head' = takeWhile p xs
-                       tail' = dropWhile p xs
-                       tail'' = case uncons tail' of
-                                  Nothing     -> tail'
-                                  Just (_, y) -> y
-                    in (head', tail'')
+checkAppNameAuthentication :: String -> Credentials -> IO Bool
+checkAppNameAuthentication app_name auth = do
 
 parseLogs :: ActionM (Maybe [LogEntry])
 parseLogs = do
