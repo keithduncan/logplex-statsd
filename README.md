@@ -59,3 +59,8 @@ Keiths-MacBook-Pro:logplex-statsd keith$ script/debug-server
 ## Deploy to Heroku
 
 TODO Heroku Button
+
+## Piping a Heroku application's logs to logplex-parse
+
+TODO logplex HTTPS drain instructions, add per-app authentication credentials
+too
