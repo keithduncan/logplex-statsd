@@ -25,6 +25,7 @@ import Text.Logplex.Parser
 import Text.Syslog.Parser
 import Text.HerokuErrors.Parser
 import Credentials
+import Metrics
 
 import qualified Network.Statsd as Stats
 import qualified Network.Statsd.Cluster as StatsCluster
@@ -38,11 +39,6 @@ import qualified Network.Statsd.Cluster as StatsCluster
 
 main :: IO ()
 main = (maybe 3000 read <$> lookupEnv "PORT") >>= server
-
-metricsCluster :: IO StatsCluster.Cluster
-metricsCluster = let configurations = []
-                     metricsClients = Stats.fromURI <$> configurations
-                  in return $ StatsCluster.cluster metricsClients
 
 server :: Int -> IO ()
 server port = scotty port $ do
