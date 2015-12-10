@@ -70,16 +70,18 @@ server port = scotty port $ do
       app <- param "app_name" :: ActionM T.Text
       logs <- parseLogs
 
-      unless (null logs) $ do
-        let errors = rights $ parseHerokuError <$> catMaybes (getMessage <$> logs)
+      case logs of
+        Nothing -> return ()
+        Just l -> do
+          let errors = rights $ parseHerokuError <$> catMaybes (getMessage <$> l)
 
-        let statPrefix = T.unpack app ++ "heroku.errors"
+          let statPrefix = T.unpack app ++ "heroku.errors"
 
-        liftIO $ forM_ errors $ \err ->
-          let stat = statPrefix ++ "." ++ getCode err
-           in StatsCluster.increment metricsCluster stat
+          liftIO $ forM_ errors $ \err ->
+            let stat = statPrefix ++ "." ++ getCode err
+             in StatsCluster.increment metricsCluster stat
 
-        created
+          created
 
 -- TODO make this 'throw' an error which is handled in the application to mean
 -- unauthenticated
@@ -119,17 +121,17 @@ checkAppAuthentication app auth = do
                                   Just (_, y) -> y
                     in (head', tail'')
 
-parseLogs :: ActionM [LogEntry]
+parseLogs :: ActionM (Maybe [LogEntry])
 parseLogs = do
   contentType <- T.unpack . fromMaybe "" <$> header "Content-Type"
   if (toLower <$> contentType) /= "application/logplex-1"
-  then notAcceptable >> return []
+  then notAcceptable >> return Nothing
   else do
     logplexDocument <- BC.unpack <$> body
 
     case parseLogplex logplexDocument of
-      Left _     -> unprocessable >> return []
-      Right logs -> return logs
+      Left _     -> unprocessable >> return Nothing
+      Right logs -> return (Just logs)
 
 unauthenticated = status unauthorized401 >> json A.Null
 notAcceptable = status notAcceptable406 >> json A.Null
