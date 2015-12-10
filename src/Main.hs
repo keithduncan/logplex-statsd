@@ -3,8 +3,9 @@
 import System.Environment
 import System.Time
 
-import Web.Scotty
+import Web.Scotty.Trans
 import Network.Wai.Middleware.RequestLogger
+import Network.Wai.Handler.Warp (Settings, defaultSettings, setFdCacheDuration, setPort)
 import Network.HTTP.Types
 import Network.HTTP.Authentication.Basic
 
@@ -13,6 +14,7 @@ import Control.Monad.Trans
 import Control.Error.Util
 import Control.Monad.Reader (MonadReader, ReaderT, asks, runReaderT)
 
+import Data.Default
 import qualified Data.Text.Lazy as T
 import qualified Data.Aeson as A
 import Data.Char
@@ -32,21 +34,14 @@ import Configuration
 import qualified Network.Statsd as Stats
 import qualified Network.Statsd.Cluster as StatsCluster
 
-{-
-  TODO
-
-  1. Make the cluster / connected statsd socket part of a ReaderT config
-  2. Put Scotty into production mode if `SCOTTY_ENV` is absent or 'production'
--}
-
 main :: IO ()
-main = (maybe 3000 read <$> lookupEnv "PORT") >>= server
+main = getConfig >>= runApplication
 
 runApplication :: Config -> IO ()
 runApplication c = do
   o <- getOptions (environment c)
   let r m = runReaderT (runConfigM m) c
-  scottyOptsT o r r application
+  scottyOptsT o r application
 
 getOptions :: Environment -> IO Options
 getOptions e = do
@@ -58,8 +53,25 @@ getOptions e = do
       _           -> 0
   }
 
-server :: Int -> IO ()
-server port = scotty port $ do
+getSettings :: Environment -> IO Settings
+getSettings e = do
+  port <- getPort
+  return $ setPort port defaultSettings
+
+getPort :: IO Int
+getPort = maybe 3000 read <$> lookupEnv "PORT"
+
+type Action a = ActionT T.Text ConfigM a
+
+defaultH :: Environment -> T.Text -> Action ()
+defaultH e x = do
+  status internalServerError500
+  json $ case e of
+    Development -> A.object ["error" A..= showError x]
+    _           -> A.Null
+
+application :: ScottyT T.Text ConfigM ()
+application = do
   middleware logStdoutDev
 
   get "/_ping" $ do
@@ -81,7 +93,7 @@ server port = scotty port $ do
 
     auth <- checkAuthentication
     when auth $ do
-      app <- param "app_name" :: ActionM T.Text
+      app <- param "app_name" :: Action T.Text
       logs <- parseLogs
 
       case logs of
@@ -91,7 +103,7 @@ server port = scotty port $ do
 
           let statPrefix = T.unpack app ++ ".heroku.errors"
 
-          cluster <- liftIO metricsCluster
+          cluster <- lift (asks metrics)
 
           liftIO $ forM_ errors $ \err ->
             let stat = statPrefix ++ "." ++ getCode err
@@ -99,9 +111,11 @@ server port = scotty port $ do
 
           created
 
+  notFound (status status404 >> json A.Null)
+
 -- TODO make this 'throw' an error which is handled in the application to mean
 -- unauthenticated
-checkAuthentication :: ActionM Bool
+checkAuthentication :: Action Bool
 checkAuthentication = do
   app <- param "app_name"
 
@@ -122,7 +136,7 @@ checkAppNameAuthentication app_name auth = do
   creds <- credentialsForAppName app_name
   return $ auth == creds
 
-parseLogs :: ActionM (Maybe [LogEntry])
+parseLogs :: Action (Maybe [LogEntry])
 parseLogs = do
   contentType <- T.unpack . fromMaybe "" <$> header "Content-Type"
   if (toLower <$> contentType) /= "application/logplex-1"
