@@ -14,6 +14,7 @@ import Control.Error.Util
 
 import qualified Data.Text.Lazy as T
 import qualified Data.Aeson as A
+import Data.Char
 import Data.Maybe
 import Data.Either (rights)
 import Data.Either.Combinators (fromRight, fromRight')
@@ -76,9 +77,11 @@ server port = scotty port $ do
 
           let statPrefix = T.unpack app ++ "heroku.errors"
 
+          cluster <- liftIO metricsCluster
+
           liftIO $ forM_ errors $ \err ->
             let stat = statPrefix ++ "." ++ getCode err
-             in StatsCluster.increment metricsCluster stat
+             in StatsCluster.increment cluster stat
 
           created
 
@@ -97,13 +100,13 @@ checkAuthentication = do
                in case credentials of
                  Left er -> unauthenticated
                  Right c -> do
-                   check <- liftIO (checkAppAuthentication app c)
+                   check <- liftIO (checkAppNameAuthentication app c)
                    bool unauthenticated (return True) check
 
--- TODO make this variable based on the app name, single global authentication
--- credentials are bad practice.
 checkAppNameAuthentication :: String -> Credentials -> IO Bool
 checkAppNameAuthentication app_name auth = do
+  creds <- credentialsForAppName app_name
+  return $ auth == creds
 
 parseLogs :: ActionM (Maybe [LogEntry])
 parseLogs = do
