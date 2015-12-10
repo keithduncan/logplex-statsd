@@ -2,8 +2,11 @@
 
 require 'socket'
 
+port = ARGV[1].to_i
+
 server = UDPSocket.new.tap do |s|
-  s.bind("0.0.0.0", 8126)
+  s.bind("127.0.0.1", port)
+  puts "Listening on port #{port}..."
 end
 
 loop do

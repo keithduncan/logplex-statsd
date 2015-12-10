@@ -24,6 +24,15 @@ logplex-statsd builds on two primary components:
 These are tied together using [Scotty](http://github.com/scotty-web/scotty) to receive, handle
 and respond to incoming requests from Logplex.
 
+## Development
+
+`script/development-bootstrap` checks your machine for the required components,
+creates a cabal sandbox and installs the dependencies.
+
+logplex-statsd uses `foreman` in development to run the processes for testing.
+Run `script/debug-server` to start the web server and two statsd listener
+processes.
+
 ## Deploy to Heroku
 
 TODO Heroku Button

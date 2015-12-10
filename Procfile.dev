@@ -1,2 +1,3 @@
 web: cabal run
-listener: script/listener
+listener-8126: script/listener 8126
+listener-8127: script/listener 8127

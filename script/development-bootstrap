@@ -5,3 +5,12 @@ then
 	echo -e "foreman(1) not found, please install using gem(1)"
 	exit 1
 fi
+
+if [ -z "$(which cabal)" ]
+then
+	echo -e "cabal(1) not found, please install the Haskell platform from https://www.haskell.org/platform/"
+	exit 1
+fi
+
+cabal sandbox init
+cabal install --only-dependencies
