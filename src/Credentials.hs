@@ -3,6 +3,7 @@ module Credentials (
 ) where
 
 import System.Environment
+import System.IO.Error
 
 import Network.HTTP.Authentication.Basic
 
@@ -16,10 +17,10 @@ credentialsPrefix = "API_CREDENTIALS"
 -- credentials if there aren't app specific ones set.
 credentialsForAppName :: String -> IO Credentials
 credentialsForAppName app_name = do
-  let defaultCredentials = credentialsForName credentialsPrefix
   let appCredentials = credentialsForName $ credentialsPrefix <> "_" <> (toUpper <$> app_name)
+  let defaultCredentials = credentialsForName credentialsPrefix
 
-  appCredentials
+  catchIOError appCredentials (const defaultCredentials)
 
 credentialsForName :: String -> IO Credentials
 credentialsForName name = do
