@@ -40,8 +40,8 @@ main = getConfig >>= runApplication
 runApplication :: Config -> IO ()
 runApplication c = do
   o <- getOptions (environment c)
-  let r m = runReaderT (runConfigM m) c
-  scottyOptsT o r application
+  let run m = runReaderT (runConfigM m) c
+  scottyOptsT o run (application (environment c))
 
 getOptions :: Environment -> IO Options
 getOptions e = do
@@ -64,15 +64,15 @@ getPort = maybe 3000 read <$> lookupEnv "PORT"
 type Action a = ActionT T.Text ConfigM a
 
 defaultH :: Environment -> T.Text -> Action ()
-defaultH e x = do
-  status internalServerError500
-  json $ case e of
-    Development -> A.object ["error" A..= showError x]
-    _           -> A.Null
+defaultH e x = json $ case e of
+                        Development -> A.object ["error" A..= showError x]
+                        _           -> A.Null
 
-application :: ScottyT T.Text ConfigM ()
-application = do
+application :: Environment -> ScottyT T.Text ConfigM ()
+application e = do
   middleware logStdoutDev
+
+  defaultHandler (defaultH e)
 
   get "/_ping" $ do
     (TOD sec _) <- liftIO getClockTime
