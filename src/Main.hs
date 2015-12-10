@@ -26,6 +26,7 @@ import Text.Syslog.Parser
 import Text.HerokuErrors.Parser
 import Credentials
 import Metrics
+import Configuration
 
 import qualified Network.Statsd as Stats
 import qualified Network.Statsd.Cluster as StatsCluster
