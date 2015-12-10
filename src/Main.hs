@@ -33,8 +33,8 @@ import qualified Network.Statsd.Cluster as StatsCluster
 {-
   TODO
 
-  1. Put statsd collector cluster config into environment
-  2. Make the cluster / connected statsd socket part of a ReaderT config
+  1. Make the cluster / connected statsd socket part of a ReaderT config
+  2. Put Scotty into production mode if `SCOTTY_ENV` is absent or 'production'
 -}
 
 main :: IO ()
