@@ -11,6 +11,7 @@ import Network.HTTP.Authentication.Basic
 import Control.Monad
 import Control.Monad.Trans
 import Control.Error.Util
+import Control.Monad.Reader (MonadReader, ReaderT, asks, runReaderT)
 
 import qualified Data.Text.Lazy as T
 import qualified Data.Aeson as A
@@ -40,6 +41,22 @@ import qualified Network.Statsd.Cluster as StatsCluster
 
 main :: IO ()
 main = (maybe 3000 read <$> lookupEnv "PORT") >>= server
+
+runApplication :: Config -> IO ()
+runApplication c = do
+  o <- getOptions (environment c)
+  let r m = runReaderT (runConfigM m) c
+  scottyOptsT o r r application
+
+getOptions :: Environment -> IO Options
+getOptions e = do
+  s <- getSettings e
+  return def {
+    settings = s,
+    verbose = case e of
+      Development -> 1
+      _           -> 0
+  }
 
 server :: Int -> IO ()
 server port = scotty port $ do
