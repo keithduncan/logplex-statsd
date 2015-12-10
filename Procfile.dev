@@ -1,1 +1,2 @@
 web: cabal run
+listener: script/listener
