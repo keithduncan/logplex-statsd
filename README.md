@@ -5,7 +5,8 @@ Report Heroku platform errors to a statsd collector for aggregation and storage.
 ## Summary
 
 Heroku injects platform errors into your application’s Logplex stream. You can view
-the last 24hrs worth of these errors in the application’s dashboard.
+the last 24hrs worth of these errors in the application’s dashboard but can’t build
+on top of them.
 
 If you want to graph these error trends over a longer time scale, apply functions to them
 or configure nagios alerts based on their occurrence, you need to dump them into a database.
