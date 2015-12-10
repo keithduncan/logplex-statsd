@@ -71,7 +71,7 @@ server port = scotty port $ do
         Just l -> do
           let errors = rights $ parseHerokuError <$> catMaybes (getMessage <$> l)
 
-          let statPrefix = T.unpack app ++ "heroku.errors"
+          let statPrefix = T.unpack app ++ ".heroku.errors"
 
           cluster <- liftIO metricsCluster
 
