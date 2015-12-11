@@ -68,7 +68,9 @@ defaultH e x = json $ case e of
 
 application :: Environment -> ScottyT T.Text ConfigM ()
 application e = do
-  middleware logStdoutDev
+  middleware $ case e of
+    Development -> logStdoutDev
+    _           -> logStdout
 
   defaultHandler (defaultH e)
 
