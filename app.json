@@ -17,7 +17,7 @@
       "required": true,
       "value": "statsd://localhost:8126,statsd://localhost:8127"
     },
-    "API_CREDENTIALS": {
+    "API_SECRET": {
       "description": "Global authentication credentials used if per-app credentials aren't specified",
       "required": true,
       "generator": "secret"
