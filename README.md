@@ -11,8 +11,10 @@ on top of them.
 If you want to graph these error trends over a longer time scale, apply functions to them
 or configure nagios alerts based on their occurrence, you need to dump them into a database.
 
-logplex-statsd allows you to parse and egress these errors over UDP into persistent storage
-like Graphite’s [carbon](https://github.com/graphite-project/) for analysis.
+logplex-statsd is a Heroku deployable application that can be configured as a log drain
+destination for your other Heroku applications. It will parse these errors from the logs
+and egress them over UDP into persistent storage like Graphite’s [carbon](https://github.com/graphite-project/)
+for analysis.
 
 ## Components
 
