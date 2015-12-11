@@ -58,9 +58,6 @@ getSettings e = do
   port <- getPort
   return $ setPort port defaultSettings
 
-getPort :: IO Int
-getPort = maybe 3000 read <$> lookupEnv "PORT"
-
 type Action a = ActionT T.Text ConfigM a
 
 defaultH :: Environment -> T.Text -> Action ()

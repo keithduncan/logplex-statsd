@@ -22,6 +22,9 @@ data Environment = Development | Production deriving (Read)
 getEnvironment :: IO Environment
 getEnvironment = maybe Production read <$> Env.lookupEnv "SCOTTY_ENV"
 
+getPort :: IO Int
+getPort = maybe 3000 read <$> Env.lookupEnv "PORT"
+
 data Config = Config { environment :: Environment
                      , metrics :: Statsd.Cluster
                      }
