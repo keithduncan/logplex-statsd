@@ -19,7 +19,11 @@ import Control.Monad.IO.Class (MonadIO)
 import Metrics
 import qualified Network.Statsd.Cluster as Statsd
 
-data Environment = Development | Production deriving (Read)
+data Environment = Development | Production
+
+instance Read Environment where
+  read "development" = Development
+  read "production" = Production
 
 getEnvironment :: IO Environment
 getEnvironment = maybe Production read <$> Env.lookupEnv "SCOTTY_ENV"
