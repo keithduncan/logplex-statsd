@@ -58,7 +58,7 @@ Keiths-MacBook-Pro:logplex-statsd keith$ script/debug-server
 
 ## Deploy to Heroku
 
-TODO Heroku Button
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 ## Piping a Heroku application's logs to logplex-parse
 
