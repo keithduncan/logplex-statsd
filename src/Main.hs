@@ -6,7 +6,6 @@ import System.IO.Error
 
 import Web.Scotty.Trans
 import Network.Wai.Middleware.RequestLogger
-import Network.Wai.Handler.Warp (Settings, defaultSettings, setFdCacheDuration, setPort)
 import Network.HTTP.Types
 import Network.HTTP.Authentication.Basic
 
@@ -15,7 +14,6 @@ import Control.Monad.Trans
 import Control.Error.Util
 import Control.Monad.Reader (MonadReader, ReaderT, asks, runReaderT)
 
-import Data.Default
 import qualified Data.Text.Lazy as T
 import qualified Data.Aeson as A
 import Data.Char
@@ -43,21 +41,6 @@ runApplication c = do
   o <- getOptions (environment c)
   let run m = runReaderT (runConfigM m) c
   scottyOptsT o run (application (environment c))
-
-getOptions :: Environment -> IO Options
-getOptions e = do
-  s <- getSettings e
-  return def {
-    settings = s,
-    verbose = case e of
-      Development -> 1
-      _           -> 0
-  }
-
-getSettings :: Environment -> IO Settings
-getSettings e = do
-  port <- getPort
-  return $ setPort port defaultSettings
 
 type Action a = ActionT T.Text ConfigM a
 
