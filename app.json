@@ -23,7 +23,7 @@
       "generator": "secret"
     },
     "HALCYON_AWS_ACCESS_KEY_ID": {
-      "description": "AWS IAM User Access ID for storing build artefacts",
+      "description": "AWS IAM User Access ID for storing build artefacts, requires Get, List, Put and Delete permissions in the configured bucket",
       "required": true
     },
     "HALCYON_AWS_SECRET_ACCESS_KEY": {
