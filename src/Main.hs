@@ -2,6 +2,7 @@
 
 import System.Environment
 import System.Time
+import System.IO.Error
 
 import Web.Scotty.Trans
 import Network.Wai.Middleware.RequestLogger
@@ -129,9 +130,7 @@ checkAuthentication = do
                    bool unauthenticated (return True) check
 
 checkAppNameAuthentication :: String -> Credentials -> IO Bool
-checkAppNameAuthentication app_name auth = do
-  creds <- credentialsForAppName app_name
-  return $ auth == creds
+checkAppNameAuthentication app_name auth = catchIOError ((== auth) <$> credentialsForAppName app_name) (const $ return False)
 
 parseLogs :: Action (Maybe [LogEntry])
 parseLogs = do
