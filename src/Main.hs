@@ -5,6 +5,7 @@ import System.Time
 import System.IO.Error
 
 import Web.Scotty.Trans
+import Network.Wai
 import Network.Wai.Middleware.RequestLogger
 import Network.HTTP.Types
 import Network.HTTP.Authentication.Basic
@@ -49,11 +50,13 @@ defaultH e x = json $ case e of
                         Development -> A.object ["error" A..= showError x]
                         _           -> A.Null
 
+logger :: Environment -> Network.Wai.Middleware
+logger Development = logStdoutDev
+logger _           = logStdout
+
 application :: Environment -> ScottyT T.Text ConfigM ()
 application e = do
-  middleware $ case e of
-    Development -> logStdoutDev
-    _           -> logStdout
+  middleware (logger e)
 
   defaultHandler (defaultH e)
 
