@@ -11,8 +11,8 @@ on top of them.
 If you want to graph these error trends over a longer time scale, apply functions to them
 or configure nagios alerts based on their occurrence, you need to dump them into a database.
 
-logplex-statsd allows you to parse and egress these errors into persistent storage like
-Graphite’s [carbon](https://github.com/graphite-project/).
+logplex-statsd allows you to parse and egress these errors over UDP into persistent storage
+like Graphite’s [carbon](https://github.com/graphite-project/) for analysis.
 
 ## Components
 
@@ -21,8 +21,8 @@ logplex-statsd builds on two primary components:
 - [keithduncan/logplex-parse](https://github.com/keithduncan/logplex-parse)
 - [keithduncan/statsd-client](https://github.com/keithduncan/statsd-client)
 
-These are tied together using [Scotty](http://github.com/scotty-web/scotty) to receive, handle
-and respond to incoming requests from Logplex.
+These are tied together using [Scotty](http://github.com/scotty-web/scotty) to receive, authenticate
+and respond to incoming logs from Logplex.
 
 ## Development
 
