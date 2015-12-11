@@ -19,7 +19,8 @@
     },
     "API_CREDENTIALS": {
       "description": "Global authentication credentials used if per-app credentials aren't specified",
-      "required": true
+      "required": true,
+      "generator": "secret"
     }
   }
 }
