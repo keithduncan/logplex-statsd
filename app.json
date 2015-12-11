@@ -21,6 +21,26 @@
       "description": "Global authentication credentials used if per-app credentials aren't specified",
       "required": true,
       "generator": "secret"
+    },
+    "HALCYON_AWS_ACCESS_KEY_ID": {
+      "description": "AWS IAM User Access ID for storing build artefacts",
+      "required": true
+    },
+    "HALCYON_AWS_SECRET_ACCESS_KEY": {
+      "description": "AWS IAM User Secret Key for storing build artefacts",
+      "required": true
+    },
+    "HALCYON_S3_BUCKET": {
+      "description": "AWS S3 Bucket to store build artefacts",
+      "required": true
+    },
+    "HALCYON_CABAL_VERSION": {
+      "description": "cabal version to install",
+      "value": "1.22.6.0"
+    },
+    "HALCYON_GHC_VERSION": {
+      "description": "GHC version to install",
+      "value": "7.10.1"
     }
   }
 }
