@@ -5,7 +5,7 @@
   "env": {
     "BUILDPACK_URL": {
       "description": "Heroku buildpack for deploying Haskell apps",
-      "value": "https://github.com/mietek/haskell-on-heroku"
+      "value": "https://github.com/keithduncan/haskell-on-heroku"
     },
     "SCOTTY_ENV": {
       "description": "Environment",
