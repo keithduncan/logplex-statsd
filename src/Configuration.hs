@@ -7,6 +7,8 @@ module Configuration (
   getConfig,
 
   ConfigM(..),
+
+  getPort,
 ) where
 
 import qualified System.Environment as Env
