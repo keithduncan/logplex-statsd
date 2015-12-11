@@ -16,6 +16,10 @@
       "description": "Ordered cluster of hosts to route statsd metrics to",
       "required": true,
       "value": "statsd://localhost:8126,statsd://localhost:8127"
+    },
+    "API_CREDENTIALS": {
+      "description": "Global authentication credentials used if per-app credentials aren't specified",
+      "required": true
     }
   }
 }
