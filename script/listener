@@ -5,6 +5,7 @@ require 'socket'
 port = ARGV[0].to_i
 
 server = UDPSocket.new.tap do |s|
+  s.setsockopt(:SOCKET, :REUSEPORT, 1)
   s.bind("127.0.0.1", port)
   $stderr.puts "Listening on port #{port}..."
 end
