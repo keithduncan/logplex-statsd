@@ -8,7 +8,7 @@ import System.IO.Error
 
 import qualified Data.Text as T
 import Data.Maybe
-import Data.Either (lefts, rights)
+import Data.Either (partitionEithers)
 import Data.Either.Combinators (leftToMaybe)
 import Data.Monoid ((<>))
 import Data.List (intercalate)
@@ -36,13 +36,10 @@ metricsClusterForConfiguration config = do
       -- catch any IOError that would occur from evaluating any specific client
       clientErrors = sequence $ clientIO . mapSnd tryIOError <$> clientIOs
 
-  clients <- (clientError <$>) <$> clientErrors
-
-  let errors = lefts clients
-  let clients' = rights clients
+  (errors, clients) <- partitionEithers . (clientError <$>) <$> clientErrors
 
   if null errors
-  then return $ StatsCluster.cluster clients'
+  then return $ StatsCluster.cluster clients
   else let header = "couldn't connect to cluster, " <> show (length errors) <> " clients failed:\n"
            clientReasons = intercalate "\n" errors
            reason = header <> clientReasons
