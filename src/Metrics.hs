@@ -25,7 +25,7 @@ metricsClusterForConfiguration :: String -> IO StatsCluster.Cluster
 metricsClusterForConfiguration config = do
   let clientConfigurations = T.unpack <$> T.split (==',') (T.pack config)
       uris = catMaybes $ parseURI <$> clientConfigurations
-      clients = catMaybes <$> sequence (Stats.fromURI <$> uris)
+      clients = sequence (Stats.fromURI <$> uris)
 
   clients' <- clients
 
