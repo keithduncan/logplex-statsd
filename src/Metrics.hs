@@ -43,7 +43,7 @@ metricsClusterForConfiguration config = do
 
   if null errors
   then return $ StatsCluster.cluster clients'
-  else let header = "couldn't connect to cluster, " <> show (length errors) <> " clients failed:"
+  else let header = "couldn't connect to cluster, " <> show (length errors) <> " clients failed:\n"
            clientReasons = intercalate "\n" errors
            reason = header <> clientReasons
         in fail reason
@@ -60,4 +60,4 @@ metricsClusterForConfiguration config = do
 
     clientError :: (String, Either IOError Stats.StatsdClient) -> Either String Stats.StatsdClient
     clientError (context, Right c) = Right c
-    clientError (context, Left e)  = Left ("couldn't construct client for " <> context <> "\n" <> show e)
+    clientError (context, Left e)  = Left ("\tcouldn't construct client for " <> ("`" <> context <> "`") <> "\n\t" <> show e)
