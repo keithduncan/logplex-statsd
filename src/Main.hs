@@ -128,10 +128,12 @@ parseLogs = do
   else do
     logplexDocument <- BC.unpack <$> body
 
+    liftIO $ print logplexDocument
+
     case parseLogplex logplexDocument of
       Right logs -> return (Just logs)
       Left e     -> do
-        liftIO (print e >> print logplexDocument)
+        liftIO (print e)
         unprocessable >> return Nothing
 
 unauthenticated = status unauthorized401 >> json A.Null
