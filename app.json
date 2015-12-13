@@ -42,5 +42,10 @@
       "description": "GHC version to install",
       "value": "7.10.1"
     }
+  },
+  "scripts": {
+    "postdeploy": {
+      "build && echo 'Now deploy again to build a slug containing the build dependencies'"
+    }
   }
 }
