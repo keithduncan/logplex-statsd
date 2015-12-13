@@ -42,7 +42,7 @@ hError = do
 
 kvPair = liftM2 (,) key (equals >> value)
 
-key = P.many1 P.alphaNum
+key = P.many1 (P.oneOf $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "-_")
 equals = P.char '='
 value = P.choice $ P.try <$> [ quotedValue, plainValue ]
 
