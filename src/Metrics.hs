@@ -19,12 +19,7 @@ import qualified Network.Statsd as Stats
 import qualified Network.Statsd.Cluster as StatsCluster
 
 metricsCluster :: IO StatsCluster.Cluster
-metricsCluster = do
-  clusterConfig <- lookupEnv "METRICS_CLUSTER"
-
-  case clusterConfig of
-    Nothing -> fail "missing cluster config"
-    Just c  -> metricsClusterForConfiguration c
+metricsCluster = lookupEnv "METRICS_CLUSTER" >>= maybe (fail "missing cluster config") metricsClusterForConfiguration
 
 metricsClusterForConfiguration :: String -> IO StatsCluster.Cluster
 metricsClusterForConfiguration config = do
@@ -40,7 +35,7 @@ metricsClusterForConfiguration config = do
 
   if null errors
   then return $ StatsCluster.cluster clients
-  else let header = "couldn't connect to cluster, " <> show (length errors) <> " clients failed:\n"
+  else let header = "couldn't connect to cluster, " <> (show . length) errors <> " clients failed:\n"
            clientReasons = intercalate "\n" errors
            reason = header <> clientReasons
         in fail reason
