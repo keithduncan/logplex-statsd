@@ -40,8 +40,11 @@ main = getConfig >>= runApplication
 runApplication :: Config -> IO ()
 runApplication c = do
   o <- getOptions (environment c)
-  let run m = runReaderT (runConfigM m) c
   scottyOptsT o run (application (environment c))
+
+  where
+    run :: ConfigM Response -> IO Response
+    run m = runReaderT (runConfigM m) c
 
 type Action a = ActionT T.Text ConfigM a
 
