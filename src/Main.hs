@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import System.Environment
-import System.Time
+import Data.Time.Clock.POSIX (getPOSIXTime)
 import System.IO.Error
 
 import Web.Scotty.Trans
@@ -61,7 +61,7 @@ application e = do
   defaultHandler (defaultH e)
 
   get "/_ping" $ do
-    (TOD sec _) <- liftIO getClockTime
+    sec <- liftIO getPOSIXTime
     let ping = M.fromList [("now", show sec), ("status", "ok")] :: M.Map String String
 
     status ok200
