@@ -41,7 +41,7 @@ getPort = maybe 3000 read <$> Env.lookupEnv "PORT"
 
 getOptions :: Environment -> IO Options
 getOptions e = do
-  s <- getSettings e
+  s <- getSettings
   return def {
     settings = s,
     verbose = case e of
@@ -49,8 +49,8 @@ getOptions e = do
       _           -> 0
   }
 
-getSettings :: Environment -> IO Settings
-getSettings e = do
+getSettings :: IO Settings
+getSettings = do
   port <- Configuration.getPort
   return $ setPort port defaultSettings
 
